@@ -29,12 +29,12 @@ print("Valor exacte: ", real)
 print('\nExercici 1 i 2')
 print('--------------------\n')
 
-numIntervals = 4
+numIntervals = 1
 errVecAbs = [[], []]
 inici = 0 
 fi = 2
 espais = 25 # per formatejar els prints
-while numIntervals <= 2**14: # segons la nostre predicció en necesitarem 2^14
+while numIntervals <= 2**14: # segons la nostre predicció en necesitarem 2^12 n'afegim un mes per a que es vegi millor
     
     trap = trapezi(inici, fi, numIntervals)
     simp = simpson(inici, fi, numIntervals)
@@ -42,10 +42,8 @@ while numIntervals <= 2**14: # segons la nostre predicció en necesitarem 2^14
     errVecAbs[0].append(abs(trap-real))
     errVecAbs[1].append(abs(simp-real))
     
-    print(f'Trapezi per m = {numIntervals:>5}: {trap:>{espais}}, error absolut = {abs(trap - real):>{espais}}, '
-          f'C = {numIntervals*2*errVecAbs[0][-1]:>{espais}}, intervals esperats = {(numIntervals*2*errVecAbs[0][-1]/(0.5*10-6))*(1/2):>{espais}}')
-    print(f'Simpson per m = {numIntervals:>5}: {simp:>{espais}}, error absolut = {abs(simp - real):>{espais}},'
-          f' C = {numIntervals*4*errVecAbs[1][-1]:>{espais}}, intervals esperats = {(numIntervals*4*errVecAbs[1][-1]/(0.5*10-6))*(1/4):>{espais}}')
+    print(f'Trapezi per m = {numIntervals:>5}: {trap:>{espais}}, error absolut = {abs(trap - real):>{espais}}')
+    print(f'Simpson per m = {numIntervals:>5}: {simp:>{espais}}, error absolut = {abs(simp - real):>{espais}}')
     print('')
     numIntervals *= 2
 
@@ -54,24 +52,28 @@ errVecAbsTrap = np.array(np.log10(errVecAbs[0]))
 errVecAbsSimp = np.array(np.log10(errVecAbs[1]))
 plt.plot(x, errVecAbsTrap, label='Trapezi')
 plt.plot(x, errVecAbsSimp, label='Simpson')
-plt.xlabel('iteracions')
-plt.ylabel('log(error)')
+plt.xlabel('log_2(nombre intervals)')
+plt.ylabel('log_10(error)')
 plt.legend()
 plt.grid(True)
 plt.show()
 
+
+#Pregunta 4
 
 #Per a obtenir 6 xifres significatives
 numIntervalsTrap = 6085
 numIntervalsSimp = 317
 trap = trapezi(inici, fi, numIntervalsTrap)
 simp = simpson(inici, fi, numIntervalsSimp)
+
+print('\nExercici 4')
+print('--------------------\n')
 print(f'Trapezi amb {numIntervalsTrap:>5} intervals: {trap:>{espais}}, error absolut = {abs(trap - real):>{espais}}')
 print(f'Simpson amb {numIntervalsSimp:>5} intervals: {simp:>{espais}}, error absolut = {abs(simp - real):>{espais}}')
 print(f'Valor real = {real:>{10+espais}}')
 
 
-#Pregunta 3 i 4
 def simpsonSimple(a, b):
     return (b - a)/6*(f(a) + 4*f((a+b)/2) + f(b))
 
@@ -93,7 +95,8 @@ print(f'Valor real = {real}')
 
 #Pregunta 5
 
-def simpson_adaptat_2(f, a, b, divide_points, tol):
+#fa el mateix que el simpson recursiu pero retorna els punts extrems dels intervals en que ha dividit el (0, 2)
+def simpsonRecursiu2(f, a, b, divide_points, tol):
     mid = (a + b) / 2
     S_ab = simpsonSimple(a, b)
     S_amid = simpsonSimple(a, mid)
@@ -102,12 +105,12 @@ def simpson_adaptat_2(f, a, b, divide_points, tol):
     if estimation < tol*(b - a):
         divide_points.append(a)
         return S_ab
-    else: return simpson_adaptat_2(f, a, mid, divide_points, tol) + simpson_adaptat_2(f, mid, b, divide_points, tol)
+    else: return simpsonRecursiu2(f, a, mid, divide_points, tol) + simpsonRecursiu2(f, mid, b, divide_points, tol)
 
 divide_points3 = []
 divide_points6 = []
-S3 = simpson_adaptat_2(f, inici, fi, divide_points3, 1e-3)
-S6 = simpson_adaptat_2(f, inici, fi, divide_points6, 1e-6)
+S3 = simpsonRecursiu2(f, inici, fi, divide_points3, 1e-3)
+S6 = simpsonRecursiu2(f, inici, fi, divide_points6, 1e-6)
 divide_points3.sort()
 divide_points6.sort()
 
@@ -123,7 +126,5 @@ plt.grid(True)
 plt.legend()
 plt.show()
 
-print('\nExercici 6')
-print('--------------------\n')
 print(f'Nombre de subintervals amb tolerància 10**-3: {len(divide_points3) - 1}')
 print(f'Nombre de subintervals amb tolerància 10**-6: {len(divide_points6) - 1}')
